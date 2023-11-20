@@ -7,6 +7,19 @@ const getNotes = asynchandler(async (req, res, next) => {
   return res.status(200).json({ data: rows });
 });
 
+const pagination = asynchandler(async (req, res, next) => {
+  const { pageNumber, limitBy } = req.query;
+  if ((!pageNumber || !limitBy) & (isNaN(pageNumber) || isNaN(limitBy))) {
+    return res
+      .status(400)
+      .json({ error: "pageNumber and limitBy should be a number." });
+  }
+  const offset = (pageNumber - 1) * limitBy;
+  const getNotesQuery = `SELECT * FROM notes ORDER BY title OFFSET $1 LIMIT $2 ;`;
+  const { rows } = await pool.query(getNotesQuery, [offset, limitBy]);
+  return res.status(200).json({ data: rows });
+});
+
 const createNote = asynchandler(async (req, res, next) => {
   const { title, description } = req.body;
   const createNotesQuery =
@@ -48,4 +61,4 @@ const updateNote = asynchandler(async (req, res, next) => {
   return res.status(200).json({ data: updatedNote.rows[0] });
 });
 
-export { getNotes, createNote, updateNote, deleteNote };
+export { getNotes, createNote, updateNote, deleteNote, pagination };
